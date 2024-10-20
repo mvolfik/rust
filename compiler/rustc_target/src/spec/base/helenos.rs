@@ -1,6 +1,6 @@
 use crate::spec::{cvs, LinkerFlavor, Cc, Lld, RelroLevel, TargetOptions};
 
-pub fn opts() -> TargetOptions {
+pub(crate) fn opts() -> TargetOptions {
     TargetOptions {
         os: "helenos".into(),
         dynamic_linking: true,
