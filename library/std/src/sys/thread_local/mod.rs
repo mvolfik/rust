@@ -164,6 +164,22 @@ pub(crate) mod key {
             pub(super) use racy::LazyKey;
             pub(super) use sgx::{Key, get, set};
             use sgx::{create, destroy};
+        } else if #[cfg(target_os = "helenos")] {
+            pub(super) struct Key;
+            pub(super) struct LazyKey;
+
+            impl LazyKey {
+                pub(super) const fn new(_destructor: Option<unsafe extern "C" fn(*mut u8)>) -> LazyKey {
+                    LazyKey
+                }
+                pub(super) fn force(&self) -> Key {
+                    unimplemented!();
+                }
+            }
+
+            pub(super) unsafe fn set(_key: Key, _ptr: *mut u8) {
+                unimplemented!();
+            }
         } else if #[cfg(target_os = "xous")] {
             mod racy;
             #[cfg(test)]

@@ -32,6 +32,9 @@ cfg_if::cfg_if! {
     } else if #[cfg(target_os = "fuchsia")] {
         mod fuchsia;
         pub use fuchsia::fill_bytes;
+    } else if #[cfg(target_os = "helenos")] {
+        mod helenos;
+        pub use helenos::fill_bytes;
     } else if #[cfg(target_os = "hermit")] {
         mod hermit;
         pub use hermit::fill_bytes;

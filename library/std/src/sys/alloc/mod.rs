@@ -77,6 +77,8 @@ cfg_if::cfg_if! {
         mod unix;
     } else if #[cfg(target_os = "windows")] {
         mod windows;
+    } else if #[cfg(target_os = "helenos")] {
+        mod helenos;
     } else if #[cfg(target_os = "hermit")] {
         mod hermit;
     } else if #[cfg(all(target_vendor = "fortanix", target_env = "sgx"))] {
