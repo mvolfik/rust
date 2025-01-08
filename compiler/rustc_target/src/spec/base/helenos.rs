@@ -6,13 +6,15 @@ use crate::spec::{
 pub(crate) fn opts() -> TargetOptions {
     TargetOptions {
         os: "helenos".into(),
+        // families: cvs!["unix"], -- I'm really not sure about this
 
         dynamic_linking: true,
         crt_static_default: true,
         crt_static_allows_dylibs: true,
         position_independent_executables: true,
+        static_position_independent_executables: true,
+        linker: Some("/home/volfmatej/.local/share/HelenOS/cross/bin/amd64-helenos-gcc".into()),
 
-        has_thread_local: false,
         has_rpath: true,
         relro_level: RelroLevel::Full,
         panic_strategy: PanicStrategy::Abort,

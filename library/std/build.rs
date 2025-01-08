@@ -41,6 +41,7 @@ fn main() {
         || target_os == "l4re"
         || target_os == "redox"
         || target_os == "haiku"
+        || target_os == "helenos"
         || target_os == "vxworks"
         || target_arch == "wasm32"
         || target_arch == "wasm64"

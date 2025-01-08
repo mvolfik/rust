@@ -64,6 +64,7 @@ cfg_if::cfg_if! {
     if #[cfg(any(
         target_os = "horizon",
         target_os = "vita",
+        target_os = "helenos",
     ))] {
         #[inline]
         unsafe fn aligned_malloc(layout: &Layout) -> *mut u8 {
