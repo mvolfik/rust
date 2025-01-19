@@ -77,6 +77,10 @@ fn main() {
         println!("cargo:rustc-cfg=restricted_std");
     }
 
+    if target_os == "helenos" {
+        println!("cargo:rustc-link-search=native=/home/volfmatej/dev/helenos-rust/helenos/amd64/export-dev/lib");
+    }
+
     println!("cargo:rustc-check-cfg=cfg(backtrace_in_libstd)");
     println!("cargo:rustc-cfg=backtrace_in_libstd");
 

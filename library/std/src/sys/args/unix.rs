@@ -5,8 +5,11 @@
 
 #![allow(dead_code)] // runtime init functions not used during testing
 
-use crate::ffi::CStr;
+use crate::ffi::{CStr, OsString};
+#[cfg(not(target_os = "helenos"))]
 use crate::os::unix::ffi::OsStringExt;
+#[cfg(target_os = "helenos")]
+use crate::os::helenos::ffi::OsStringExt;
 
 #[path = "common.rs"]
 mod common;
@@ -83,6 +86,7 @@ pub fn args() -> Args {
     target_os = "hurd",
     target_os = "rtems",
     target_os = "nuttx",
+    target_os = "helenos",
 ))]
 mod imp {
     use crate::ffi::c_char;

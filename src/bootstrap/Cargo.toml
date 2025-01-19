@@ -94,4 +94,4 @@ debug = 0
 bootstrap.debug = 1
 
 [patch.crates-io]
-cc = { path = "../../../cc-rs" }
+cc = { path = "../../../rust-cc" }
