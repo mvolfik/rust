@@ -78,7 +78,7 @@ fn main() {
     }
 
     if target_os == "helenos" {
-        println!("cargo:rustc-link-search=native=/home/volfmatej/dev/helenos-rust/helenos/amd64/export-dev/lib");
+        println!("cargo:rustc-link-search=native=/home/volfmatej/dev/helenos-rust/helenos/ia32dyn/export-dev/lib");
     }
 
     println!("cargo:rustc-check-cfg=cfg(backtrace_in_libstd)");
