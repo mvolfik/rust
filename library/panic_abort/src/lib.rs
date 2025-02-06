@@ -50,7 +50,7 @@ pub unsafe fn __rust_start_panic(_payload: &mut dyn PanicPayload) -> u32 {
     }
 
     cfg_if::cfg_if! {
-        if #[cfg(any(unix, target_os = "solid_asp3"))] {
+        if #[cfg(any(unix, target_os = "solid_asp3", target_os = "helenos"))] {
             unsafe fn abort() -> ! {
                 unsafe { libc::abort(); }
             }
