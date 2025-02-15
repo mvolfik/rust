@@ -77,13 +77,6 @@ fn main() {
         println!("cargo:rustc-cfg=restricted_std");
     }
 
-    if target_os == "helenos" {
-        // TODO: this is for development only
-        // before merging, this should be removed, and when building Rust for HelenOS, the export-dev
-        // folder should be in the cross-compilation sysroot
-        println!("cargo:rustc-link-search=native=/home/volfmatej/dev/helenos-rust/helenos/ia32dyn/export-dev/lib");
-    }
-
     println!("cargo:rustc-check-cfg=cfg(backtrace_in_libstd)");
     println!("cargo:rustc-cfg=backtrace_in_libstd");
 
