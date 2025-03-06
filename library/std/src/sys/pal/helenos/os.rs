@@ -1,26 +1,26 @@
-use libc::c_char;
-
 use core::slice::memchr;
 
+use libc::c_char;
+
+use super::unsupported;
 use crate::error::Error as StdError;
 use crate::ffi::{CStr, OsStr, OsString};
 use crate::marker::PhantomData;
+use crate::os::helenos::ffi::{OsStrExt, OsStringExt};
 use crate::path::{self, PathBuf};
 use crate::sync::{PoisonError, RwLock};
 use crate::sys::common::small_c_string::{run_path_with_cstr, run_with_cstr};
-use crate::vec;
-use crate::{fmt, io};
-
-use crate::os::helenos::ffi::{OsStringExt, OsStrExt};
-
-use super::unsupported;
+use crate::{fmt, io, vec};
 
 pub fn errno() -> i32 {
-    0
+    unsafe { *libc::__errno() }
 }
 
-pub fn error_string(_errno: i32) -> String {
-    "operation successful".to_string()
+pub fn error_string(errno: i32) -> String {
+    unsafe {
+        let cstr = libc::str_error(errno);
+        CStr::from_ptr(cstr).to_string_lossy().into_owned()
+    }
 }
 
 // from unix/os.rs
@@ -49,7 +49,6 @@ pub fn getcwd() -> io::Result<PathBuf> {
         }
     }
 }
-
 
 // from unix/os.rs
 pub fn chdir(p: &path::Path) -> io::Result<()> {

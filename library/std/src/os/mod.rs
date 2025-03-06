@@ -143,12 +143,6 @@ pub mod fuchsia;
 pub mod haiku;
 #[cfg(target_os = "helenos")]
 pub mod helenos;
-// #[cfg(target_os = "helenos")]
-// pub mod unix {
-//     pub mod ffi {
-//         pub struct OsStringExt {}
-//     }
-// }
 #[cfg(target_os = "hermit")]
 pub mod hermit;
 #[cfg(target_os = "horizon")]

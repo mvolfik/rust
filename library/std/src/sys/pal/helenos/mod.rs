@@ -4,7 +4,6 @@ use crate::io::ErrorKind;
 pub mod args;
 #[path = "../unsupported/env.rs"]
 pub mod env;
-#[path = "../unsupported/fs.rs"]
 pub mod fs;
 pub mod os;
 #[path = "../unsupported/pipe.rs"]
@@ -14,8 +13,10 @@ pub mod process;
 pub mod stdio;
 #[path = "../unsupported/thread.rs"]
 pub mod thread;
-#[path = "../unsupported/time.rs"]
+#[path = "../unix/time.rs"]
 pub mod time;
+
+pub mod sync;
 
 pub fn unsupported<T>() -> crate::io::Result<T> {
     Err(unsupported_err())
@@ -40,8 +41,33 @@ pub fn abort_internal() -> ! {
     unsafe { libc::abort() }
 }
 
-pub fn decode_error_kind(_errno: i32) -> ErrorKind { ErrorKind::Uncategorized }
+pub fn decode_error_kind(_errno: i32) -> ErrorKind {
+    ErrorKind::Uncategorized
+}
 
-pub(crate) fn is_interrupted(_errno: i32) -> bool { false }
+pub(crate) fn is_interrupted(_errno: i32) -> bool {
+    false
+}
 
-// pub mod sync;
+#[doc(hidden)]
+pub trait IsMinusOne {
+    fn is_minus_one(&self) -> bool;
+}
+
+macro_rules! impl_is_minus_one {
+    ($($t:ident)*) => ($(impl IsMinusOne for $t {
+        fn is_minus_one(&self) -> bool {
+            *self == -1
+        }
+    })*)
+}
+
+impl_is_minus_one! { i8 i16 i32 i64 isize }
+
+pub fn cvt<T: IsMinusOne>(t: T) -> crate::io::Result<T> {
+    if t.is_minus_one() { Err(crate::io::Error::last_os_error()) } else { Ok(t) }
+}
+
+pub fn cvt_nz(error: libc::c_int) -> crate::io::Result<()> {
+    if error == 0 { Ok(()) } else { Err(crate::io::Error::from_raw_os_error(error)) }
+}

@@ -1,4 +1,4 @@
-use crate::spec::{base, StackProbeType, Target, Cc, LinkerFlavor, Lld};
+use crate::spec::{Cc, LinkerFlavor, Lld, StackProbeType, Target, base};
 
 pub(crate) fn target() -> Target {
     let mut base = base::helenos::opts();

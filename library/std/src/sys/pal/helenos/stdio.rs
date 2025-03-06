@@ -28,7 +28,9 @@ impl io::Write for Stdout {
     }
 
     fn flush(&mut self) -> io::Result<()> {
-        unsafe { libc::fflush(libc::stdout); }
+        unsafe {
+            libc::fflush(libc::stdout);
+        }
         Ok(())
     }
 }
@@ -45,7 +47,9 @@ impl io::Write for Stderr {
     }
 
     fn flush(&mut self) -> io::Result<()> {
-        unsafe { libc::fflush(libc::stderr); }
+        unsafe {
+            libc::fflush(libc::stderr);
+        }
         Ok(())
     }
 }

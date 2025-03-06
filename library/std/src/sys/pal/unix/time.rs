@@ -261,6 +261,18 @@ pub struct Instant {
 }
 
 impl Instant {
+    #[cfg(target_os = "helenos")]
+    pub fn now() -> Instant {
+        let mut t = crate::mem::MaybeUninit::uninit();
+        unsafe { libc::getuptime(t.as_mut_ptr()) };
+        let t = unsafe { t.assume_init() };
+        if t.tv_nsec == 0 && t.tv_sec == 0 {
+            panic!("getuptime failed")
+        }
+        Instant { t: Timespec::new(t.tv_sec as i64, t.tv_nsec as i64).unwrap() }
+    }
+
+    #[cfg(not(target_os = "helenos"))]
     pub fn now() -> Instant {
         // https://www.manpagez.com/man/3/clock_gettime/
         //

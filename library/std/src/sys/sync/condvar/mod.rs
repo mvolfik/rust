@@ -15,6 +15,7 @@ cfg_if::cfg_if! {
     } else if #[cfg(any(
         target_family = "unix",
         target_os = "teeos",
+        target_os = "helenos",
     ))] {
         mod pthread;
         pub use pthread::Condvar;
