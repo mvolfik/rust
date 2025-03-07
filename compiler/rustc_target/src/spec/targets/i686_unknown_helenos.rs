@@ -3,7 +3,6 @@ use crate::spec::{Cc, LinkerFlavor, Lld, StackProbeType, Target, base};
 pub(crate) fn target() -> Target {
     let mut base = base::helenos::opts();
     base.cpu = "pentium4".into();
-    base.plt_by_default = false;
     base.max_atomic_width = Some(64);
     base.stack_probes = StackProbeType::Inline;
     base.linker = Some("i686-helenos-gcc".into());

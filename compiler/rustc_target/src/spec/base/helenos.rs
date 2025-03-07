@@ -3,7 +3,7 @@ use crate::spec::{PanicStrategy, RelroLevel, TargetOptions};
 pub(crate) fn opts() -> TargetOptions {
     TargetOptions {
         os: "helenos".into(),
-        // families: cvs!["unix"], // I'm really not sure about this
+
         dynamic_linking: true,
         crt_static_default: true,
         crt_static_allows_dylibs: true,
