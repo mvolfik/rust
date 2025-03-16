@@ -1,8 +1,8 @@
+use crate::ffi::CStr;
 use crate::io;
 use crate::num::NonZero;
-use crate::ffi::CStr;
+use crate::sync::{Arc, Condvar, Mutex};
 use crate::time::Duration;
-use crate::sync::{Arc, Mutex, Condvar};
 
 pub const DEFAULT_MIN_STACK_SIZE: usize = 1 * 1024 * 1024;
 
@@ -25,11 +25,7 @@ impl Thread {
             done_copy.1.notify_all();
         });
         let p = Box::into_raw(Box::new(wrapper));
-        let res = libc::fibril_create_generic(
-            thread_start,
-            p as *mut _,
-            stack,
-        );
+        let res = libc::fibril_create_generic(thread_start, p as *mut _, stack);
         if res.is_null() {
             drop(Box::from_raw(p));
             return Err(io::Error::new(io::ErrorKind::Other, "fibril_create failed"));
