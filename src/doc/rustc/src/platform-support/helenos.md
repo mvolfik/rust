@@ -20,12 +20,7 @@ Target triplets available so far:
 
 These targets only support cross-compilation. The targets do support std, although support of some platform features (filesystem, networking) may be limited.
 
-When building binaries for this target, the Hermit unikernel is built from scratch.
-The application developer themselves specializes the target and sets corresponding expectations.
-
-The Hermit targets follow Linux's `extern "C"` calling convention.
-
-Hermit binaries have the ELF format.
+You need to have a local clone of the HelenOS repository and the HelenOS toolchain set up, no development artifacts are available (yet).
 
 ## Building
 
@@ -33,18 +28,25 @@ Hermit binaries have the ELF format.
 
 For compilation of standard library, you need to build the HelenOS toolchain (because Rust needs to use `*-helenos-gcc` as linker) and shared libraries. See [this HelenOS wiki page](https://www.helenos.org/wiki/UsersGuide/CompilingFromSource#a2.Buildasupportedcross-compiler) for instruction on setting up the build. At the end of step 4 (_Configure and build_), invoke `ninja export-dev` to build the shared libraries.
 
+Then copy these shared libraries from `export-dev/lib` to the path where the compiler automatically searches for them. This will be the directory where you installed the toolchain (for example `~/.local/share/HelenOS/cross/i686-helenos/lib`). You can see this path with this command:
+
+```sh
+touch /tmp/test.c
+i686-helenos-gcc -v -c /tmp/test.c 2>&1 | grep LIBRARY_PATH
+```
+
 ## Building the target
 
 When you have the HelenOS toolchain set up and installed in your path, you can build the Rust toolchain using the standard procedure. See [rustc dev guide](https://rustc-dev-guide.rust-lang.org/building/how-to-build-and-run.html).
 
 ## Building Rust programs
 
-No special setup is needed. Simply use the toolchain you build above and run `cargo build --target <arch>-unknown-helenos`.
+No special setup is needed. Simply use the toolchain you built above and run `cargo build --target <arch>-unknown-helenos`.
 
 ## Testing
 
-Running the Rust has not been attempted yet.
+Running the Rust test suite has not been attempted yet.
 
 ## Cross-compilation toolchains and C code
 
-You should be able to cross-compile and link any needed C code using `<arch>-helenos-gcc` that you built above.
+You should be able to cross-compile and link any needed C code using `<arch>-helenos-gcc` that you built above. However, note that clang support is highly lacking. Therefore, to run tools such as `bindgen`, you will need to provide flag `-nostdinc` and manually specify the include paths to HelenOS headers, which you will find in the `export-dev` + in the cross-compilation toolchain (e.g. `~/.local/share/HelenOS/cross/lib/gcc/i686-helenos/14.2.0/include`).
