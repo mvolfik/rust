@@ -1,5 +1,4 @@
 use crate::cell::UnsafeCell;
-use crate::io::Error;
 use crate::mem;
 use crate::pin::Pin;
 
