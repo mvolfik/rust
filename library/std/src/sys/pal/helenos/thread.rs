@@ -20,7 +20,7 @@ impl Thread {
         let done = Arc::new((Mutex::new(false), Condvar::new()));
         let done_copy = Arc::clone(&done);
         let wrapper: Box<dyn FnOnce()> = Box::new(move || {
-            let res = p();
+            p();
             *done_copy.0.lock().unwrap() = true;
             done_copy.1.notify_all();
         });
