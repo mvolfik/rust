@@ -11,8 +11,6 @@ pub struct Condvar {
 impl Condvar {
     pub(crate) const PRECISE_TIMEOUT: bool = true;
     pub fn new() -> Condvar {
-        // This creates an instance in an undefined state - I hope the compiler allows that on C structs?
-        // We can unfortunately only properly initialize it after pinning it in memory.
         Condvar { inner: UnsafeCell::new(unsafe { mem::zeroed() }) }
     }
 

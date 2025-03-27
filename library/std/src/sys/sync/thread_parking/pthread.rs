@@ -28,6 +28,7 @@ impl Parker {
             cvar: Condvar::new(),
         });
 
+        Pin::new_unchecked(&mut (*parker).lock).init();
         Pin::new_unchecked(&mut (*parker).cvar).init();
     }
 

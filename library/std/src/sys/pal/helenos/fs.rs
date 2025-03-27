@@ -12,6 +12,8 @@ use crate::sys::{cvt, cvt_nz, unsupported};
 #[derive(Debug)]
 pub struct File(*mut libc::FILE);
 
+unsafe impl Send for File {}
+
 impl Drop for File {
     fn drop(&mut self) {
         unsafe { libc::fclose(self.0) };
@@ -20,6 +22,8 @@ impl Drop for File {
 
 #[derive(Clone)]
 pub struct FileAttr(libc::vfs_stat_t);
+
+unsafe impl Send for FileAttr {}
 
 #[derive(Debug)]
 pub struct ReadDir {

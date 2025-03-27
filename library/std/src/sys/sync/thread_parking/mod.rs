@@ -29,7 +29,10 @@ cfg_if::cfg_if! {
     } else if #[cfg(target_os = "xous")] {
         mod xous;
         pub use xous::Parker;
-    } else if #[cfg(target_family = "unix")] {
+    } else if #[cfg(any(
+        unix,
+        target_os = "helenos",
+    ))] {
         mod pthread;
         pub use pthread::Parker;
     } else {
