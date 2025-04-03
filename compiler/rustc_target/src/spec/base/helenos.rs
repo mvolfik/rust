@@ -4,7 +4,7 @@ pub(crate) fn opts() -> TargetOptions {
     TargetOptions {
         os: "helenos".into(),
 
-        // FIXME: without these two flags, my binaries contained R_386_RELATIVE relocations,
+        // FIXME: without these two flags, the binaries contained R_386_RELATIVE relocations,
         // which caused the loader to segfault. I should figure out why this is happening,
         // and if the error is in the binary or in the loader. Now, we get R_386_JUMP_SLOT
         // relocations, which work fine.

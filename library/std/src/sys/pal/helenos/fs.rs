@@ -1,4 +1,4 @@
-use crate::ffi::{CStr, CString, OsStr, OsString};
+use crate::ffi::{CStr, CString, OsStr, OsString, c_char};
 use crate::hash::Hash;
 use crate::io::{self, BorrowedCursor, IoSlice, IoSliceMut, SeekFrom, const_error};
 use crate::mem::MaybeUninit;
@@ -359,7 +359,7 @@ impl File {
     pub fn open(path: &Path, opts: &OpenOptions) -> io::Result<File> {
         let mode_str = opts.to_mode_str()?;
         run_path_with_cstr(path, &|path| {
-            let file = unsafe { libc::fopen(path.as_ptr(), mode_str.as_ptr() as *const i8) };
+            let file = unsafe { libc::fopen(path.as_ptr(), mode_str.as_ptr() as *const c_char) };
             if file.is_null() { Err(io::Error::last_os_error()) } else { Ok(File(file)) }
         })
     }

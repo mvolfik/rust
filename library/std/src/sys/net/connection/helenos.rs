@@ -136,7 +136,6 @@ impl TcpStream {
         unsafe { libc::inet_ep2_init(&mut epp) };
         epp.remote = socket_addr_to_c(addr);
 
-
         let mut conn: *mut tcp_conn_t = ptr::null_mut();
         let conn_res = cvt_nz(unsafe {
             libc::tcp_conn_create(client, &mut epp, ptr::null_mut(), ptr::null_mut(), &mut conn)
@@ -177,7 +176,12 @@ impl TcpStream {
     pub fn read(&self, buf: &mut [u8]) -> io::Result<usize> {
         let mut read: usize = 0;
         cvt_nz(unsafe {
-            libc::tcp_conn_recv_wait(self.conn, buf.as_mut_ptr() as *mut c_void, buf.len(), &mut read)
+            libc::tcp_conn_recv_wait(
+                self.conn,
+                buf.as_mut_ptr() as *mut c_void,
+                buf.len(),
+                &mut read,
+            )
         })?;
         Ok(read)
     }
