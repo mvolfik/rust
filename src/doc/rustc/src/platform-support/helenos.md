@@ -3,9 +3,7 @@
 **Tier: 3**
 
 Targets for [HelenOS](https://www.helenos.org).
-The [Hermit] unikernel target allows compiling your applications into self-contained, specialized unikernel images that can be run in small virtual machines.
-
-[Hermit]: https://github.com/hermit-os
+These targets allow compiling user-space applications, that you can then copy into your HelenOS ISO image to run them.
 
 Target triplets available so far:
 
@@ -18,9 +16,11 @@ Target triplets available so far:
 
 ## Requirements
 
-These targets only support cross-compilation. The targets do support std, although support of some platform features (filesystem, networking) may be limited.
+These targets only support cross-compilation. The targets will[^1] support libstd, although support of some platform features (filesystem, networking) may be limited.
 
-You need to have a local clone of the HelenOS repository and the HelenOS toolchain set up, no development artifacts are available (yet).
+You need to have a local clone of the HelenOS repository and the HelenOS toolchain set up, no HelenOS-Rust development artifacts are available.
+
+[^1]: The support is not yet available, because it needs to be done in a separate PR, because compiler support needs to be merged first to allow creating libc bindings
 
 ## Building
 

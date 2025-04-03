@@ -4,19 +4,12 @@ pub(crate) fn opts() -> TargetOptions {
     TargetOptions {
         os: "helenos".into(),
 
-        // FIXME: without these two flags, the binaries contained R_386_RELATIVE relocations,
-        // which caused the loader to segfault. I should figure out why this is happening,
-        // and if the error is in the binary or in the loader. Now, we get R_386_JUMP_SLOT
-        // relocations, which work fine.
-        crt_static_default: true,
-        crt_static_allows_dylibs: true,
-
         dynamic_linking: true,
-        position_independent_executables: true,
-        static_position_independent_executables: true,
-        no_default_libraries: false,
+        // FIXME: this actually is supported by HelenOS, but then we run into issues
+        // with linking libstartfiles.a (parts of which obviously can't be at randomized
+        // positions). The crt_* flags also have some effect on this.
+        // position_independent_executables: true,
 
-        has_rpath: true,
         relro_level: RelroLevel::Full,
         panic_strategy: PanicStrategy::Abort,
 
