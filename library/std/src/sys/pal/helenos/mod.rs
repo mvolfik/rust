@@ -12,6 +12,7 @@ pub mod pipe;
 pub mod process;
 pub mod stdio;
 pub mod thread;
+#[allow(dead_code)]
 #[path = "../unix/time.rs"]
 pub mod time;
 

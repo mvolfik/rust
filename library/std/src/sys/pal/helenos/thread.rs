@@ -7,7 +7,7 @@ use crate::time::Duration;
 pub const DEFAULT_MIN_STACK_SIZE: usize = 1 * 1024 * 1024;
 
 pub struct Thread {
-    id: libc::fid_t,
+    _id: libc::fid_t,
     done: Arc<(Mutex<bool>, Condvar)>,
 }
 
@@ -31,7 +31,7 @@ impl Thread {
             return Err(io::Error::new(io::ErrorKind::Other, "fibril_create failed"));
         }
         libc::fibril_start(res);
-        return Ok(Thread { id: res, done });
+        return Ok(Thread { _id: res, done });
 
         extern "C" fn thread_start(main: *mut libc::c_void) -> libc::errno_t {
             unsafe {

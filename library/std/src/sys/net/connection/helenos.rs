@@ -7,6 +7,7 @@ use crate::sys::common::small_c_string::run_with_cstr;
 use crate::sys::{cvt_nz, unsupported};
 use crate::time::Duration;
 
+#[allow(dead_code)]
 #[path = "./unsupported.rs"]
 mod unsupported;
 pub use unsupported::UdpSocket;
