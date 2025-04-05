@@ -89,6 +89,7 @@ dependencies = [
 [[package]]
 name = "cc"
 version = "1.2.12"
+source = "git+https://github.com/mvolfik/cc-rs.git?branch=helenos#2ac4d443f86cbf6f1f17c4158b030a1e281ad0e2"
 dependencies = [
  "shlex",
 ]

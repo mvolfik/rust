@@ -94,4 +94,4 @@ debug = 0
 bootstrap.debug = 1
 
 [patch.crates-io]
-cc = { path = "../../../rust-cc" }
+cc = { git = "https://github.com/mvolfik/cc-rs.git", branch = "helenos" }
