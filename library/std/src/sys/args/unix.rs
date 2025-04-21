@@ -5,9 +5,12 @@
 
 #![allow(dead_code)] // runtime init functions not used during testing
 
-use crate::ffi::{CStr, OsString};
+use crate::ffi::CStr;
 #[cfg(not(target_os = "helenos"))]
 use crate::os::unix::ffi::OsStringExt;
+// HelenOS is far from complete Unix compatibility, so it's not considered
+// a Unix-family target (yet?), but we want to reuse this file with the
+// argv implementation, since HelenOS is compliant there
 #[cfg(target_os = "helenos")]
 use crate::os::helenos::ffi::OsStringExt;
 
