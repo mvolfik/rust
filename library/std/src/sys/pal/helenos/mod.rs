@@ -21,7 +21,9 @@ pub fn unsupported_err() -> crate::io::Error {
 // NOTE: this is not guaranteed to run, for example when the program aborts.
 pub unsafe fn cleanup() {}
 
-pub unsafe fn init(_argc: isize, _argv: *const *const u8, _sigpipe: u8) {}
+pub unsafe fn init(argc: isize, argv: *const *const u8, _sigpipe: u8) {
+    crate::sys::args::init(argc, argv);
+}
 
 pub fn abort_internal() -> ! {
     unsafe { libc::abort() }
