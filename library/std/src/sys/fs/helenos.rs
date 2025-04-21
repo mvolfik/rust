@@ -456,6 +456,10 @@ impl File {
         cvt(unsafe { libc::ftell(self.0) }).map(|x| x as u64)
     }
 
+    pub fn tell(&self) -> io::Result<u64> {
+        self.seek(SeekFrom::Current(0))
+    }
+
     pub fn duplicate(&self) -> io::Result<File> {
         Err(const_error!(io::ErrorKind::Unsupported, "duplicate unimplemented"))
     }

@@ -21,6 +21,9 @@ cfg_if::cfg_if! {
         use windows as imp;
         pub use windows::{symlink_inner, junction_point};
         use crate::sys::path::with_native_path;
+    } else if #[cfg(target_os = "helenos")] {
+        mod helenos;
+        use helenos as imp;
     } else if #[cfg(target_os = "hermit")] {
         mod hermit;
         use hermit as imp;

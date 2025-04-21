@@ -1,18 +1,9 @@
 use crate::io::ErrorKind;
 
-#[path = "../unix/args.rs"]
-pub mod args;
-#[path = "../unsupported/env.rs"]
-pub mod env;
-pub mod fs;
 pub mod os;
 #[path = "../unsupported/pipe.rs"]
 pub mod pipe;
-#[path = "../unsupported/process.rs"]
-pub mod process;
-pub mod stdio;
 pub mod thread;
-#[allow(dead_code)]
 #[path = "../unix/time.rs"]
 pub mod time;
 
@@ -23,19 +14,14 @@ pub fn unsupported<T>() -> crate::io::Result<T> {
 }
 
 pub fn unsupported_err() -> crate::io::Error {
-    crate::io::const_error!(
-        crate::io::ErrorKind::Unsupported,
-        "operation not supported on HelenOS yet",
-    )
+    crate::io::Error::UNSUPPORTED_PLATFORM
 }
 
 // SAFETY: must be called only once during runtime cleanup.
 // NOTE: this is not guaranteed to run, for example when the program aborts.
 pub unsafe fn cleanup() {}
 
-pub unsafe fn init(argc: isize, argv: *const *const u8, _sigpipe: u8) {
-    args::init(argc, argv);
-}
+pub unsafe fn init(_argc: isize, _argv: *const *const u8, _sigpipe: u8) {}
 
 pub fn abort_internal() -> ! {
     unsafe { libc::abort() }
@@ -45,8 +31,8 @@ pub fn decode_error_kind(_errno: i32) -> ErrorKind {
     ErrorKind::Uncategorized
 }
 
-pub(crate) fn is_interrupted(_errno: i32) -> bool {
-    false
+pub fn is_interrupted(errno: i32) -> bool {
+    errno == libc::EINTR
 }
 
 #[doc(hidden)]

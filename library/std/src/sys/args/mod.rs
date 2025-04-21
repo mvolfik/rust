@@ -9,6 +9,9 @@ cfg_if::cfg_if! {
     } else if #[cfg(target_family = "windows")] {
         mod windows;
         pub use windows::*;
+    } else if #[cfg(target_os = "helenos")] {
+        mod unix;
+        pub use unix::*;
     } else if #[cfg(target_os = "hermit")] {
         mod hermit;
         pub use hermit::*;
