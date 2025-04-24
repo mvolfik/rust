@@ -1,9 +1,8 @@
-use crate::spec::{StackProbeType, Target, base};
+use crate::spec::{Target, base};
 
 pub(crate) fn target() -> Target {
     let mut base = base::helenos::opts();
     base.max_atomic_width = Some(128);
-    base.stack_probes = StackProbeType::Inline;
     base.features = "+v8a".into();
     base.linker = Some("aarch64-helenos-gcc".into());
 

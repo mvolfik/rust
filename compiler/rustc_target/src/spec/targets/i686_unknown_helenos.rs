@@ -1,10 +1,9 @@
-use crate::spec::{Cc, LinkerFlavor, Lld, StackProbeType, Target, base};
+use crate::spec::{Cc, LinkerFlavor, Lld, Target, base};
 
 pub(crate) fn target() -> Target {
     let mut base = base::helenos::opts();
     base.cpu = "pentium4".into();
     base.max_atomic_width = Some(64);
-    base.stack_probes = StackProbeType::Inline;
     base.linker = Some("i686-helenos-gcc".into());
     base.add_pre_link_args(LinkerFlavor::Gnu(Cc::Yes, Lld::No), &["-m32"]);
 
