@@ -37,6 +37,8 @@ const STAGE0_MISSING_TARGETS: &[&str] = &[
     "armv5te-unknown-helenos-eabi",
     "i686-unknown-helenos",
     "x86_64-unknown-helenos",
+    "powerpc-unknown-helenos",
+    "sparc64-unknown-helenos",
     // just a dummy comment so the list doesn't get onelined
     "x86_64-lynx-lynxos178",
 ];
