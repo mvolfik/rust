@@ -1,4 +1,4 @@
-use crate::spec::{Cc, LinkerFlavor, Lld, Target, base};
+use crate::spec::{Cc, LinkerFlavor, Lld, RustcAbi, Target, base};
 
 pub(crate) fn target() -> Target {
     let mut base = base::helenos::opts();
@@ -6,6 +6,7 @@ pub(crate) fn target() -> Target {
     base.max_atomic_width = Some(64);
     base.linker = Some("i686-helenos-gcc".into());
     base.add_pre_link_args(LinkerFlavor::Gnu(Cc::Yes, Lld::No), &["-m32"]);
+    base.rustc_abi = Some(RustcAbi::X86Sse2);
 
     Target {
         llvm_target: "i686-unknown-helenos".into(),

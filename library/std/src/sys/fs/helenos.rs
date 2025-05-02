@@ -147,11 +147,11 @@ impl DirEntry {
     }
 
     pub fn metadata(&self) -> io::Result<FileAttr> {
-        Err(const_error!(io::ErrorKind::Unsupported, "metadata unimplemented"))
+        stat(&self.path())
     }
 
     pub fn file_type(&self) -> io::Result<FileType> {
-        Err(const_error!(io::ErrorKind::Unsupported, "file_type unimplemented"))
+        self.metadata().map(|attr| attr.file_type())
     }
 }
 

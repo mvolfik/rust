@@ -29,7 +29,10 @@ pub(crate) struct Timespec {
 }
 
 impl SystemTime {
-    #[cfg_attr(any(target_os = "horizon", target_os = "hurd", target_os = "helenos"), allow(unused))]
+    #[cfg_attr(
+        any(target_os = "horizon", target_os = "hurd", target_os = "helenos"),
+        allow(unused)
+    )]
     pub fn new(tv_sec: i64, tv_nsec: i64) -> Result<SystemTime, io::Error> {
         Ok(SystemTime { t: Timespec::new(tv_sec, tv_nsec)? })
     }
