@@ -382,6 +382,9 @@
 //@ revisions: powerpc_unknown_freebsd
 //@ [powerpc_unknown_freebsd] compile-flags: --target powerpc-unknown-freebsd
 //@ [powerpc_unknown_freebsd] needs-llvm-components: powerpc
+//@ revisions: powerpc_unknown_helenos
+//@ [powerpc_unknown_helenos] compile-flags: --target powerpc-unknown-helenos
+//@ [powerpc_unknown_helenos] needs-llvm-components: powerpc
 //@ revisions: powerpc_unknown_linux_gnu
 //@ [powerpc_unknown_linux_gnu] compile-flags: --target powerpc-unknown-linux-gnu
 //@ [powerpc_unknown_linux_gnu] needs-llvm-components: powerpc
@@ -496,9 +499,9 @@
 //@ revisions: s390x_unknown_linux_musl
 //@ [s390x_unknown_linux_musl] compile-flags: --target s390x-unknown-linux-musl
 //@ [s390x_unknown_linux_musl] needs-llvm-components: systemz
-//@ revisions: sparc64_unknown_linux_gnu
-//@ [sparc64_unknown_linux_gnu] compile-flags: --target sparc64-unknown-linux-gnu
-//@ [sparc64_unknown_linux_gnu] needs-llvm-components: sparc
+//@ revisions: sparc64_unknown_helenos
+//@ [sparc64_unknown_linux_helenos] compile-flags: --target sparc64-unknown-helenos
+//@ [sparc64_unknown_linux_helenos] needs-llvm-components: sparc
 //@ revisions: sparc64_unknown_netbsd
 //@ [sparc64_unknown_netbsd] compile-flags: --target sparc64-unknown-netbsd
 //@ [sparc64_unknown_netbsd] needs-llvm-components: sparc
