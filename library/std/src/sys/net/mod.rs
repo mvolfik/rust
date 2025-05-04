@@ -30,11 +30,6 @@ cfg_if::cfg_if! {
             mod uefi;
             pub use uefi::*;
         }
-    } else if #[cfg(target_os = "helenos")] {
-        mod connection {
-            mod helenos;
-            pub use helenos::*;
-        }
     } else {
         mod connection {
             mod unsupported;
