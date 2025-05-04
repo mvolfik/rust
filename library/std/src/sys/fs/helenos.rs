@@ -186,24 +186,30 @@ impl OpenOptions {
         self.create_new = create_new;
     }
 
-    /// Create `(r|w|x)[b|t][+][x]` string from the flags
+    /// HelenOS API expects a string of the form `(r|w|a)[+][x]` to open files,
+    /// but then, internally, this string is converted by [`parse_mode`] back
+    /// to a set of flags exactly equivalent to the ones used here in Rust.
     ///
-    /// The possible mode combinations were enumerated with this Python script (which
-    /// should be equivalent to the [`parse_mode`] function from HelenOS):
+    /// We assume the implementation of the flags in HelenOS is correct, so
+    /// we really want to write an inverse function to `parse_mode` to
+    /// convert the flags to a string here.
+    ///
+    /// We created the following Python script (which contains a copy of `parse_mode`
+    /// from HelenOS) to enumerate the valid combinations of flags and their meaning.
     ///
     /// [`parse_mode`]: <https://github.com/HelenOS/helenos/blob/32254d6ae36aa180fa53338ca60684a9c87d7947/uspace/lib/c/generic/io/io.c#L189>
     /// ```python
     /// # (r|w|a)[+][x]
     /// def parse_mode(fmode: str):
-    ///     plus = len(fmode) > 1 and fmode[1] == "+"
+    ///     plus = "+" in fmode
     ///     ex = fmode[-1] == "x"
     ///
-    ///     append = None
-    ///     read = None
-    ///     write = None
-    ///     create = None
-    ///     truncate = None
-    ///     excl = None
+    ///     append = False
+    ///     read = False
+    ///     write = False
+    ///     create = False
+    ///     truncate = False
+    ///     excl = False
     ///
     ///     if fmode[0] == "r":
     ///         read = True
@@ -227,6 +233,7 @@ impl OpenOptions {
     ///         append = True
     ///         write = True
     ///         create = True
+    ///         read = plus
     ///
     ///     return {
     ///         "append": append,
@@ -238,120 +245,71 @@ impl OpenOptions {
     ///     }
     ///
     /// for c in ["r", "w", "a"]:
-    /// for p in ["", "+"]:
-    ///     for x in ["", "x"]:
-    ///         s = f"{c}{p}{x}"
-    ///         try:
-    ///             print(f"{s}: {parse_mode(s)}")
-    ///         except ValueError as e:
-    ///             print(f"{s}: {e}")
+    ///     for p in ["", "+"]:
+    ///         for x in ["", "x"]:
+    ///             s = f"{c}{p}{x}"
+    ///             try:
+    ///                 print(f"{s}: {parse_mode(s)}")
+    ///             except ValueError as e:
+    ///                 print(f"{s}: {e}")
     /// ```
     ///
     /// This yields only the following valid combinations:
     /// ```text
-    /// a:   {'append': True, 'read': None,  'write': True,  'create': True, 'truncate': None, 'excl': None}
+    /// a:   {'append': True,  'read': False, 'write': True,  'create': True,  'truncate': False, 'excl': False}
     ///
-    /// wx:  {'append': None, 'read': False, 'write': True,  'create': True, 'truncate': True, 'excl': True}
-    /// w+x: {'append': None, 'read': True,  'write': True,  'create': True, 'truncate': None, 'excl': True}
+    /// wx:  {'append': False, 'read': False, 'write': True,  'create': True,  'truncate': True,  'excl': True}
+    /// w+x: {'append': False, 'read': True,  'write': True,  'create': True,  'truncate': False, 'excl': True}
     ///
-    /// w:   {'append': None, 'read': False, 'write': True,  'create': True, 'truncate': True, 'excl': False}
+    /// w:   {'append': False, 'read': False, 'write': True,  'create': True,  'truncate': True,  'excl': False}
     ///
-    /// r:   {'append': None, 'read': True,  'write': False, 'create': None, 'truncate': None, 'excl': None}
+    /// r:   {'append': False, 'read': True,  'write': False, 'create': False, 'truncate': False, 'excl': False}
     ///
-    /// r+:  {'append': None, 'read': True,  'write': True,  'create': None, 'truncate': None, 'excl': None}
-    /// w+:  {'append': None, 'read': True,  'write': True,  'create': True, 'truncate': None, 'excl': False}
+    /// r+:  {'append': False, 'read': True,  'write': True,  'create': False, 'truncate': False, 'excl': False}
+    /// w+:  {'append': False, 'read': True,  'write': True,  'create': True,  'truncate': False, 'excl': False}
     /// ```
     fn to_mode_str(&self) -> io::Result<[u8; 4]> {
-        if self.append {
-            // write can be any, append takes precedence
-            if self.read {
-                return Err(const_error!(
-                    io::ErrorKind::InvalidInput,
-                    "file opened with `append`+`read` is not supported on HelenOS"
-                ));
-            }
-            if !self.create {
-                return Err(const_error!(
-                    io::ErrorKind::InvalidInput,
-                    "file opened with `append` must be in create mode on HelenOS"
-                ));
-            }
-            if self.truncate {
-                return Err(const_error!(
-                    io::ErrorKind::InvalidInput,
-                    "file opened with `append` must not be in truncate mode on HelenOS"
-                ));
-            }
-            if self.create_new {
-                return Err(const_error!(
-                    io::ErrorKind::InvalidInput,
-                    "file opened with `append`+`create_new` is not supported on HelenOS"
-                ));
-            }
-            return Ok(*b"a\0\0\0");
-        }
-        // append is false
-        if self.create_new {
-            // create, truncate are ignored
-            if !self.write {
-                return Err(const_error!(
-                    io::ErrorKind::InvalidInput,
-                    "file opened with `create_new` must be in write mode on HelenOS"
-                ));
-            }
-            if self.read {
-                return Ok(*b"w+x\0");
-            }
-            return Ok(*b"wx\0\0");
-        }
-        // create_new is false
-        if !self.read {
-            if !self.write {
-                return Err(const_error!(
-                    io::ErrorKind::InvalidInput,
-                    "one of `read`,`write`,`append` must be set when opening a file"
-                ));
-            }
-            if !self.truncate {
-                return Err(const_error!(
-                    io::ErrorKind::InvalidInput,
-                    "file opened with `write` but not `read` must be in truncate mode"
-                ));
-            }
-            if !self.create {
-                return Err(const_error!(
-                    io::ErrorKind::InvalidInput,
-                    "file opened with `write` but not `read` must be in create mode"
-                ));
-            }
-            return Ok(*b"w+x\0");
-        }
-        // read is true
-        if !self.write {
-            if self.truncate {
-                return Err(const_error!(
-                    io::ErrorKind::InvalidInput,
-                    "file opened with `read` but not `write` must not be in truncate mode"
-                ));
-            }
-            if self.create {
-                return Err(const_error!(
-                    io::ErrorKind::InvalidInput,
-                    "file opened with `read` but not `write` must not be in create mode"
-                ));
-            }
-            return Ok(*b"r\0\0\0");
-        }
-        if self.truncate {
-            return Err(const_error!(
+        match (self.append, self.read, self.write, self.create, self.truncate, self.create_new) {
+            // app, rea, writ, crea, trun, excl
+            // all disabled
+            (false, false, false, _, _, _) => Err(const_error!(
+                io::ErrorKind::InvalidInput,
+                "one of `read`,`write`,`append` must be set when opening a file"
+            )),
+            // append mode
+            (true, false, true, true, false, false) => Ok(*b"a\0\0\0"),
+            (true, _, _, _, _, _) => Err(const_error!(
+                io::ErrorKind::InvalidInput,
+                "file opened with `append` must have `write+create` and none of `read,truncate,exclusive` on HelenOS"
+            )),
+            // exclusive create mode
+            // create,truncate are irrelevant
+            (_, false, true, _, _, true) => Ok(*b"wx\0\0"),
+            (_, true, true, _, _, true) => Ok(*b"w+x\0"),
+            (_, _, _, _, _, true) => Err(const_error!(
+                io::ErrorKind::InvalidInput,
+                "file opened with `create_new` must have `write` on HelenOS"
+            )),
+            // write only
+            (_, false, true, true, true, _) => Ok(*b"w\0\0\0"),
+            (_, false, true, _, _, _) => Err(const_error!(
+                io::ErrorKind::InvalidInput,
+                "file opened write-only must have `create+truncate` on HelenOS"
+            )),
+            // read only
+            (_, true, false, false, false, _) => Ok(*b"r\0\0\0"),
+            (_, true, false, _, _, _) => Err(const_error!(
+                io::ErrorKind::InvalidInput,
+                "file opened with `read` but not `write` can't truncate or create"
+            )),
+            // read+write
+            (_, true, true, true, false, _) => Ok(*b"w+\0\0"),
+            (_, true, true, false, false, _) => Ok(*b"r+\0\0"),
+            (_, true, true, _, _, _) => Err(const_error!(
                 io::ErrorKind::InvalidInput,
                 "file opened with `read`+`write` can't be in truncate mode"
-            ));
+            )),
         }
-        if self.create {
-            return Ok(*b"w+\0\0");
-        }
-        return Ok(*b"r+\0\0");
     }
 }
 
