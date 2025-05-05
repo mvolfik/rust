@@ -29,8 +29,15 @@ pub fn abort_internal() -> ! {
     unsafe { libc::abort() }
 }
 
-pub fn decode_error_kind(_errno: i32) -> ErrorKind {
-    ErrorKind::Uncategorized
+pub fn decode_error_kind(errno: i32) -> ErrorKind {
+    use ErrorKind::*;
+    match errno as libc::c_int {
+        libc::ENOENT => NotFound,
+        libc::ENOMEM => OutOfMemory,
+        libc::EINVAL => InvalidInput,
+        libc::EEXIST => AlreadyExists,
+        _ => Uncategorized,
+    }
 }
 
 pub fn is_interrupted(errno: i32) -> bool {

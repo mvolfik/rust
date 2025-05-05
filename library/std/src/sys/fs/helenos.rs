@@ -6,6 +6,7 @@ use crate::os::helenos::ffi::OsStrExt;
 use crate::path::{Path, PathBuf};
 use crate::sync::Arc;
 use crate::sys::common::small_c_string::run_path_with_cstr;
+pub use crate::sys::fs::common::{copy, exists, remove_dir_all};
 use crate::sys::time::SystemTime;
 use crate::sys::{cvt, cvt_nz, unsupported};
 
@@ -25,20 +26,14 @@ pub struct FileAttr(libc::vfs_stat_t);
 
 unsafe impl Send for FileAttr {}
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct ReadDir {
-    base: Arc<PathBuf>, // to be shared with the DirEntry to build FullPath, if needed
-    dir: *mut libc::DIR,
+    entries: Vec<DirEntry>,
 }
 
-impl Drop for ReadDir {
-    fn drop(&mut self) {
-        unsafe { libc::closedir(self.dir) };
-    }
-}
-
+#[derive(Clone, Debug)]
 pub struct DirEntry {
-    base: Arc<PathBuf>,
+    base: Arc<PathBuf>, // the base is shared among all entries
     name: CString,
 }
 
@@ -48,7 +43,7 @@ pub struct OpenOptions {
     write: bool,
     append: bool,
     truncate: bool,
-    create: bool,
+    create: Option<bool>,
     create_new: bool,
 }
 
@@ -126,14 +121,7 @@ impl Iterator for ReadDir {
     type Item = io::Result<DirEntry>;
 
     fn next(&mut self) -> Option<io::Result<DirEntry>> {
-        let entry = unsafe { libc::readdir(self.dir) };
-        if entry.is_null() {
-            return None;
-        }
-
-        let name = unsafe { CStr::from_ptr((*entry).d_name.as_ptr()) };
-
-        Some(Ok(DirEntry { base: self.base.clone(), name: name.to_owned() }))
+        self.entries.pop().map(Result::Ok)
     }
 }
 
@@ -162,7 +150,7 @@ impl OpenOptions {
             write: false,
             append: false,
             truncate: false,
-            create: false,
+            create: None,
             create_new: false,
         }
     }
@@ -180,7 +168,7 @@ impl OpenOptions {
         self.truncate = truncate;
     }
     pub fn create(&mut self, create: bool) {
-        self.create = create;
+        self.create = Some(create);
     }
     pub fn create_new(&mut self, create_new: bool) {
         self.create_new = create_new;
@@ -269,18 +257,19 @@ impl OpenOptions {
     /// w+:  {'append': False, 'read': True,  'write': True,  'create': True,  'truncate': False, 'excl': False}
     /// ```
     fn to_mode_str(&self) -> io::Result<[u8; 4]> {
-        match (self.append, self.read, self.write, self.create, self.truncate, self.create_new) {
+        let create = self.create.unwrap_or(if self.append { true } else { false });
+        match (self.append, self.read, self.write, create, self.truncate, self.create_new) {
             // app, rea, writ, crea, trun, excl
             // all disabled
             (false, false, false, _, _, _) => Err(const_error!(
                 io::ErrorKind::InvalidInput,
                 "one of `read`,`write`,`append` must be set when opening a file"
             )),
-            // append mode
-            (true, false, true, true, false, false) => Ok(*b"a\0\0\0"),
+            // append mode, Rust says append implies write
+            (true, false, _, true, false, false) => Ok(*b"a\0\0\0"),
             (true, _, _, _, _, _) => Err(const_error!(
                 io::ErrorKind::InvalidInput,
-                "file opened with `append` must have `write+create` and none of `read,truncate,exclusive` on HelenOS"
+                "file opened with `append` must be !create on HelenOS, and nonoe of `read,truncate,exclusive` can be set"
             )),
             // exclusive create mode
             // create,truncate are irrelevant
@@ -323,7 +312,12 @@ impl File {
     }
 
     pub fn file_attr(&self) -> io::Result<FileAttr> {
-        Err(const_error!(io::ErrorKind::Unsupported, "file_attr unimplemented"))
+        let mut handle = 0;
+        cvt_nz(unsafe { libc::vfs_fhandle(self.0, &mut handle) })?;
+
+        let mut stat_val = MaybeUninit::uninit();
+        cvt_nz(unsafe { libc::vfs_stat(handle, stat_val.as_mut_ptr()) })?;
+        Ok(FileAttr(unsafe { stat_val.assume_init() }))
     }
 
     pub fn fsync(&self) -> io::Result<()> {
@@ -423,7 +417,7 @@ impl File {
     }
 
     pub fn set_permissions(&self, _perm: FilePermissions) -> io::Result<()> {
-        Err(const_error!(io::ErrorKind::Unsupported, "set_permissions unimplemented"))
+        Ok(())
     }
 
     pub fn set_times(&self, _times: FileTimes) -> io::Result<()> {
@@ -436,42 +430,60 @@ impl DirBuilder {
         DirBuilder {}
     }
 
-    pub fn mkdir(&self, _p: &Path) -> io::Result<()> {
-        unsupported()
+    pub fn mkdir(&self, p: &Path) -> io::Result<()> {
+        run_path_with_cstr(p, &|path| {
+            cvt_nz(unsafe {
+                libc::vfs_link_path(
+                    path.as_ptr(),
+                    libc::vfs_file_kind_t::KIND_DIRECTORY,
+                    crate::ptr::null_mut(),
+                )
+            })
+        })
     }
 }
 
 pub fn readdir(p: &Path) -> io::Result<ReadDir> {
     let dir = run_path_with_cstr(p, &|p| unsafe { Ok(libc::opendir(p.as_ptr())) })?;
     if dir.is_null() {
-        Err(io::Error::last_os_error())
-    } else {
-        Ok(ReadDir { base: Arc::new(p.to_path_buf()), dir })
+        return Err(io::Error::last_os_error());
     }
+    // unfortunately, the iteration can't be done lazily, because it triggers issues
+    // when the directory is modified while we are iterating over it
+    let mut entries = Vec::new();
+    let base = Arc::new(p.to_path_buf());
+    loop {
+        let entry = unsafe { libc::readdir(dir) };
+        if entry.is_null() {
+            break;
+        }
+        let name = unsafe { CStr::from_ptr((*entry).d_name.as_ptr()) }.to_owned();
+        entries.push(DirEntry { base: base.clone(), name });
+    }
+    unsafe { libc::closedir(dir) };
+    // we will later pop() from the end, let's return them in the system order
+    entries.reverse();
+    Ok(ReadDir { entries })
 }
 
-pub fn unlink(_p: &Path) -> io::Result<()> {
-    unsupported()
+pub fn unlink(p: &Path) -> io::Result<()> {
+    run_path_with_cstr(p, &|path| cvt_nz(unsafe { libc::vfs_unlink_path(path.as_ptr()) }))
 }
 
-pub fn rename(_old: &Path, _new: &Path) -> io::Result<()> {
-    unsupported()
+pub fn rename(old: &Path, new: &Path) -> io::Result<()> {
+    run_path_with_cstr(old, &|old| {
+        run_path_with_cstr(new, &|new| {
+            cvt_nz(unsafe { libc::vfs_rename_path(old.as_ptr(), new.as_ptr()) })
+        })
+    })
 }
 
 pub fn set_perm(_p: &Path, _perm: FilePermissions) -> io::Result<()> {
-    Err(const_error!(io::ErrorKind::Unsupported, "file permissions not supported on HelenOS"))
+    Ok(()) // no permissions on HelenOS
 }
 
-pub fn rmdir(_p: &Path) -> io::Result<()> {
-    unsupported()
-}
-
-pub fn remove_dir_all(_path: &Path) -> io::Result<()> {
-    unsupported()
-}
-
-pub fn exists(_path: &Path) -> io::Result<bool> {
-    unsupported()
+pub fn rmdir(p: &Path) -> io::Result<()> {
+    unlink(p)
 }
 
 pub fn readlink(_p: &Path) -> io::Result<PathBuf> {
@@ -494,14 +506,10 @@ pub fn stat(p: &Path) -> io::Result<FileAttr> {
     })
 }
 
-pub fn lstat(_p: &Path) -> io::Result<FileAttr> {
-    unsupported()
+pub fn lstat(p: &Path) -> io::Result<FileAttr> {
+    stat(p) // HelenOS has no symlinks
 }
 
 pub fn canonicalize(_p: &Path) -> io::Result<PathBuf> {
-    unsupported()
-}
-
-pub fn copy(_from: &Path, _to: &Path) -> io::Result<u64> {
     unsupported()
 }

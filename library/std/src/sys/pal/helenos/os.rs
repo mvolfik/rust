@@ -218,10 +218,8 @@ pub unsafe fn unsetenv(_n: &OsStr) -> io::Result<()> {
     Err(io::const_error!(io::ErrorKind::Unsupported, "cannot unset env vars on this platform"))
 }
 
-// back to our own code:
-
 pub fn temp_dir() -> PathBuf {
-    panic!("no filesystem on this platform")
+    PathBuf::from("/tmp")
 }
 
 pub fn home_dir() -> Option<PathBuf> {
