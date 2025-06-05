@@ -13,6 +13,10 @@ cfg_select! {
         mod sgx;
         pub use sgx::*;
     }
+    target_os = "helenos" => {
+        mod helenos;
+        pub use helenos::*;
+    }
     target_os = "motor" => {
         mod motor;
         pub use motor::*;

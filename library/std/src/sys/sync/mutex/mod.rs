@@ -19,6 +19,7 @@ cfg_select! {
     }
     any(
         target_family = "unix",
+        target_os = "helenos",
         target_os = "teeos",
     ) => {
         mod pthread;

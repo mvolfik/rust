@@ -23,6 +23,10 @@ cfg_select! {
         mod windows;
         pub use windows::*;
     }
+    target_os = "helenos" => {
+        mod helenos;
+        pub use helenos::*;
+    }
     target_os = "hermit" => {
         mod hermit;
         pub use hermit::*;

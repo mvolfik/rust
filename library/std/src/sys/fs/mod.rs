@@ -23,6 +23,10 @@ cfg_select! {
         pub use windows::{symlink_inner, junction_point};
         use crate::sys::path::with_native_path;
     }
+    target_os = "helenos" => {
+        mod helenos;
+        use helenos as imp;
+    }
     target_os = "hermit" => {
         mod hermit;
         use hermit as imp;

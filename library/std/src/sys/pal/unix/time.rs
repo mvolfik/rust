@@ -29,7 +29,10 @@ pub(crate) struct Timespec {
 }
 
 impl SystemTime {
-    #[cfg_attr(any(target_os = "horizon", target_os = "hurd"), allow(unused))]
+    #[cfg_attr(
+        any(target_os = "horizon", target_os = "hurd", target_os = "helenos"),
+        allow(unused)
+    )]
     pub fn new(tv_sec: i64, tv_nsec: i64) -> Result<SystemTime, io::Error> {
         Ok(SystemTime { t: Timespec::new(tv_sec, tv_nsec)? })
     }
@@ -262,6 +265,7 @@ impl Instant {
     pub(crate) const CLOCK_ID: libc::clockid_t = libc::CLOCK_UPTIME_RAW;
     #[cfg(not(target_vendor = "apple"))]
     pub(crate) const CLOCK_ID: libc::clockid_t = libc::CLOCK_MONOTONIC;
+    // HELENOS_TODO
     pub fn now() -> Instant {
         // https://www.manpagez.com/man/3/clock_gettime/
         //

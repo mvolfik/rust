@@ -40,6 +40,10 @@ cfg_select! {
         mod fuchsia;
         pub use fuchsia::fill_bytes;
     }
+    target_os = "helenos" => {
+        mod helenos;
+        pub use helenos::fill_bytes;
+    }
     target_os = "hermit" => {
         mod hermit;
         pub use hermit::fill_bytes;

@@ -262,6 +262,7 @@
 )]
 #![cfg_attr(target_family = "wasm", feature(stdarch_wasm_atomic_wait))]
 #![cfg_attr(target_arch = "wasm64", feature(simd_wasm64))]
+#![cfg_attr(target_os = "helenos", feature(ip_from))]
 //
 // Language features:
 // tidy-alphabetical-start

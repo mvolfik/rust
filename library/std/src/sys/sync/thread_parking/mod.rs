@@ -35,7 +35,7 @@ cfg_select! {
         mod xous;
         pub use xous::Parker;
     }
-    target_family = "unix" => {
+    any(target_family = "unix", target_os = "helenos") => {
         mod pthread;
         pub use pthread::Parker;
     }

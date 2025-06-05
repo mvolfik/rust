@@ -37,6 +37,10 @@ cfg_select! {
         mod solid;
         pub use self::solid::*;
     }
+    target_os = "helenos" => {
+        mod helenos;
+        pub use self::helenos::*;
+    }
     target_os = "hermit" => {
         mod hermit;
         pub use self::hermit::*;
@@ -93,7 +97,7 @@ cfg_select! {
 
 pub const FULL_BACKTRACE_DEFAULT: bool = cfg_select! {
     // Fuchsia components default to full backtrace.
-    target_os = "fuchsia" => true,
+    any(target_os = "fuchsia", target_os = "helenos") => true,
     _ => false,
 };
 
